@@ -10,33 +10,219 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AmenitiesRouteImport } from './routes/amenities'
+import { Route as EnterpriseRouteImport } from './routes/enterprise'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as MembershipRouteImport } from './routes/membership'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as BookingConfirmationRouteImport } from './routes/booking.confirmation'
+import { Route as BookingReviewRouteImport } from './routes/booking.review'
+import { Route as LocationsIndexRouteImport } from './routes/locations.index'
+import { Route as LocationsSlugRouteImport } from './routes/locations.$slug'
+import { Route as WorkspacesIndexRouteImport } from './routes/workspaces.index'
+import { Route as WorkspacesIdRouteImport } from './routes/workspaces.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AmenitiesRoute = AmenitiesRouteImport.update({
+  id: '/amenities',
+  path: '/amenities',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnterpriseRoute = EnterpriseRouteImport.update({
+  id: '/enterprise',
+  path: '/enterprise',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembershipRoute = MembershipRouteImport.update({
+  id: '/membership',
+  path: '/membership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookingConfirmationRoute = BookingConfirmationRouteImport.update({
+  id: '/booking/confirmation',
+  path: '/booking/confirmation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookingReviewRoute = BookingReviewRouteImport.update({
+  id: '/booking/review',
+  path: '/booking/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocationsIndexRoute = LocationsIndexRouteImport.update({
+  id: '/locations/',
+  path: '/locations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocationsSlugRoute = LocationsSlugRouteImport.update({
+  id: '/locations/$slug',
+  path: '/locations/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkspacesIndexRoute = WorkspacesIndexRouteImport.update({
+  id: '/workspaces/',
+  path: '/workspaces/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkspacesIdRoute = WorkspacesIdRouteImport.update({
+  id: '/workspaces/$id',
+  path: '/workspaces/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/amenities': typeof AmenitiesRoute
+  '/enterprise': typeof EnterpriseRoute
+  '/help': typeof HelpRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
+  '/membership': typeof MembershipRoute
+  '/pricing': typeof PricingRoute
+  '/signup': typeof SignupRoute
+  '/booking/confirmation': typeof BookingConfirmationRoute
+  '/booking/review': typeof BookingReviewRoute
+  '/locations/$slug': typeof LocationsSlugRoute
+  '/workspaces/$id': typeof WorkspacesIdRoute
+  '/locations/': typeof LocationsIndexRoute
+  '/workspaces/': typeof WorkspacesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/amenities': typeof AmenitiesRoute
+  '/enterprise': typeof EnterpriseRoute
+  '/help': typeof HelpRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
+  '/membership': typeof MembershipRoute
+  '/pricing': typeof PricingRoute
+  '/signup': typeof SignupRoute
+  '/booking/confirmation': typeof BookingConfirmationRoute
+  '/booking/review': typeof BookingReviewRoute
+  '/locations/$slug': typeof LocationsSlugRoute
+  '/workspaces/$id': typeof WorkspacesIdRoute
+  '/locations': typeof LocationsIndexRoute
+  '/workspaces': typeof WorkspacesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/amenities': typeof AmenitiesRoute
+  '/enterprise': typeof EnterpriseRoute
+  '/help': typeof HelpRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
+  '/membership': typeof MembershipRoute
+  '/pricing': typeof PricingRoute
+  '/signup': typeof SignupRoute
+  '/booking/confirmation': typeof BookingConfirmationRoute
+  '/booking/review': typeof BookingReviewRoute
+  '/locations/$slug': typeof LocationsSlugRoute
+  '/workspaces/$id': typeof WorkspacesIdRoute
+  '/locations/': typeof LocationsIndexRoute
+  '/workspaces/': typeof WorkspacesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/amenities'
+    | '/enterprise'
+    | '/help'
+    | '/how-it-works'
+    | '/login'
+    | '/membership'
+    | '/pricing'
+    | '/signup'
+    | '/booking/confirmation'
+    | '/booking/review'
+    | '/locations/$slug'
+    | '/workspaces/$id'
+    | '/locations/'
+    | '/workspaces/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/amenities'
+    | '/enterprise'
+    | '/help'
+    | '/how-it-works'
+    | '/login'
+    | '/membership'
+    | '/pricing'
+    | '/signup'
+    | '/booking/confirmation'
+    | '/booking/review'
+    | '/locations/$slug'
+    | '/workspaces/$id'
+    | '/locations'
+    | '/workspaces'
+  id:
+    | '__root__'
+    | '/'
+    | '/amenities'
+    | '/enterprise'
+    | '/help'
+    | '/how-it-works'
+    | '/login'
+    | '/membership'
+    | '/pricing'
+    | '/signup'
+    | '/booking/confirmation'
+    | '/booking/review'
+    | '/locations/$slug'
+    | '/workspaces/$id'
+    | '/locations/'
+    | '/workspaces/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AmenitiesRoute: typeof AmenitiesRoute
+  EnterpriseRoute: typeof EnterpriseRoute
+  HelpRoute: typeof HelpRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  LoginRoute: typeof LoginRoute
+  MembershipRoute: typeof MembershipRoute
+  PricingRoute: typeof PricingRoute
+  SignupRoute: typeof SignupRoute
+  BookingConfirmationRoute: typeof BookingConfirmationRoute
+  BookingReviewRoute: typeof BookingReviewRoute
+  LocationsSlugRoute: typeof LocationsSlugRoute
+  WorkspacesIdRoute: typeof WorkspacesIdRoute
+  LocationsIndexRoute: typeof LocationsIndexRoute
+  WorkspacesIndexRoute: typeof WorkspacesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +234,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/amenities': {
+      id: '/amenities'
+      path: '/amenities'
+      fullPath: '/amenities'
+      preLoaderRoute: typeof AmenitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enterprise': {
+      id: '/enterprise'
+      path: '/enterprise'
+      fullPath: '/enterprise'
+      preLoaderRoute: typeof EnterpriseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/membership': {
+      id: '/membership'
+      path: '/membership'
+      fullPath: '/membership'
+      preLoaderRoute: typeof MembershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/booking/confirmation': {
+      id: '/booking/confirmation'
+      path: '/booking/confirmation'
+      fullPath: '/booking/confirmation'
+      preLoaderRoute: typeof BookingConfirmationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/booking/review': {
+      id: '/booking/review'
+      path: '/booking/review'
+      fullPath: '/booking/review'
+      preLoaderRoute: typeof BookingReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations/': {
+      id: '/locations/'
+      path: '/locations'
+      fullPath: '/locations/'
+      preLoaderRoute: typeof LocationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locations/$slug': {
+      id: '/locations/$slug'
+      path: '/locations/$slug'
+      fullPath: '/locations/$slug'
+      preLoaderRoute: typeof LocationsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workspaces/': {
+      id: '/workspaces/'
+      path: '/workspaces'
+      fullPath: '/workspaces/'
+      preLoaderRoute: typeof WorkspacesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workspaces/$id': {
+      id: '/workspaces/$id'
+      path: '/workspaces/$id'
+      fullPath: '/workspaces/$id'
+      preLoaderRoute: typeof WorkspacesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AmenitiesRoute: AmenitiesRoute,
+  EnterpriseRoute: EnterpriseRoute,
+  HelpRoute: HelpRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  LoginRoute: LoginRoute,
+  MembershipRoute: MembershipRoute,
+  PricingRoute: PricingRoute,
+  SignupRoute: SignupRoute,
+  BookingConfirmationRoute: BookingConfirmationRoute,
+  BookingReviewRoute: BookingReviewRoute,
+  LocationsSlugRoute: LocationsSlugRoute,
+  WorkspacesIdRoute: WorkspacesIdRoute,
+  LocationsIndexRoute: LocationsIndexRoute,
+  WorkspacesIndexRoute: WorkspacesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

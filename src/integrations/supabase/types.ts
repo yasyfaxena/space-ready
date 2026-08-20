@@ -14,13 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          access_code: string
+          booking_date: string
+          created_at: string
+          end_time: string
+          id: string
+          location_slug: string
+          method: string
+          people: number
+          reference: string
+          start_time: string
+          status: string
+          total_idr: number
+          user_id: string
+          workspace_id: string
+          workspace_name: string
+        }
+        Insert: {
+          access_code: string
+          booking_date: string
+          created_at?: string
+          end_time: string
+          id?: string
+          location_slug: string
+          method?: string
+          people?: number
+          reference: string
+          start_time: string
+          status?: string
+          total_idr?: number
+          user_id: string
+          workspace_id: string
+          workspace_name: string
+        }
+        Update: {
+          access_code?: string
+          booking_date?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          location_slug?: string
+          method?: string
+          people?: number
+          reference?: string
+          start_time?: string
+          status?: string
+          total_idr?: number
+          user_id?: string
+          workspace_id?: string
+          workspace_name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          company: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          full_name?: string
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      booked_slots: {
+        Args: { _date: string; _workspace_id: string }
+        Returns: {
+          end_time: string
+          start_time: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

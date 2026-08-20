@@ -236,3 +236,43 @@
 @utility section-y {
   padding-block: clamp(3.5rem, 7vw, 6rem);
 }
+
+@utility bg-galaxy {
+  background-image: var(--gradient-galaxy);
+}
+
+@utility bg-galaxy-accent {
+  background-image: var(--gradient-accent);
+}
+
+@utility text-galaxy {
+  background-image: var(--gradient-accent);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@utility hover-glow {
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    background-color 0.22s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--galaxy-purple) 45%, transparent);
+    box-shadow: var(--shadow-glow);
+  }
+}
+
+@layer base {
+  a,
+  button {
+    transition:
+      color 0.18s ease,
+      background-color 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.22s ease;
+  }
+}

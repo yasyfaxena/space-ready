@@ -2,11 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { MapPin, Users, Clock, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AvailabilityBadge } from "./availability-badge";
-import { rupiah, type Location, type Workspace, getLocation } from "@/data/workspace-data";
+import { type Location, type Workspace, getLocation } from "@/data/workspace-data";
+import { useI18n } from "@/lib/i18n";
 
 export function LocationCard({ location }: { location: Location }) {
+  const { money } = useI18n();
   return (
-    <article className="group overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-soft)] transition-shadow hover:shadow-[var(--shadow-lift)]">
+    <article className="hover-glow group overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-soft)]">
       <div className="relative aspect-[16/10] overflow-hidden">
         <img
           src={location.image}
@@ -58,7 +60,7 @@ export function LocationCard({ location }: { location: Location }) {
 
         <div className="mt-5 flex items-end justify-between gap-3">
           <p className="text-sm text-muted-foreground">
-            From <span className="text-base font-semibold text-foreground">{rupiah(location.priceFrom)}</span> / day
+            From <span className="text-base font-semibold text-foreground">{money(location.priceFrom)}</span> / day
           </p>
           <Button asChild size="sm">
             <Link to="/locations/$slug" params={{ slug: location.slug }}>
@@ -72,11 +74,12 @@ export function LocationCard({ location }: { location: Location }) {
 }
 
 export function WorkspaceCard({ workspace }: { workspace: Workspace }) {
+  const { money } = useI18n();
   const location = getLocation(workspace.locationSlug);
   const bookable = workspace.availability !== "full" && workspace.availability !== "unavailable";
 
   return (
-    <article className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-soft)] sm:flex-row">
+    <article className="hover-glow flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-soft)] sm:flex-row">
       <img
         src={workspace.image}
         alt={workspace.name}
@@ -122,7 +125,7 @@ export function WorkspaceCard({ workspace }: { workspace: Workspace }) {
 
         <div className="mt-4 flex items-end justify-between gap-3 border-t border-border pt-4">
           <p className="text-sm text-muted-foreground">
-            <span className="text-lg font-semibold text-foreground">{rupiah(workspace.price)}</span> / {workspace.unit}
+            <span className="text-lg font-semibold text-foreground">{money(workspace.price)}</span> / {workspace.unit}
           </p>
           <div className="flex gap-2">
             <Button asChild variant="outline" size="sm">
@@ -131,7 +134,7 @@ export function WorkspaceCard({ workspace }: { workspace: Workspace }) {
               </Link>
             </Button>
             <Button asChild size="sm" disabled={!bookable}>
-              <Link to="/booking/review" search={{ workspace: workspace.id }}>
+              <Link to="/workspaces/$id" params={{ id: workspace.id }}>
                 {bookable ? "Book" : "Unavailable"}
               </Link>
             </Button>

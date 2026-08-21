@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AmenitiesRouteImport } from './routes/amenities'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as EnterpriseRouteImport } from './routes/enterprise'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
@@ -33,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
 const AmenitiesRoute = AmenitiesRouteImport.update({
   id: '/amenities',
   path: '/amenities',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EnterpriseRoute = EnterpriseRouteImport.update({
@@ -104,6 +110,7 @@ const WorkspacesIdRoute = WorkspacesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/amenities': typeof AmenitiesRoute
+  '/dashboard': typeof DashboardRoute
   '/enterprise': typeof EnterpriseRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/amenities': typeof AmenitiesRoute
+  '/dashboard': typeof DashboardRoute
   '/enterprise': typeof EnterpriseRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/amenities': typeof AmenitiesRoute
+  '/dashboard': typeof DashboardRoute
   '/enterprise': typeof EnterpriseRoute
   '/help': typeof HelpRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/amenities'
+    | '/dashboard'
     | '/enterprise'
     | '/help'
     | '/how-it-works'
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/amenities'
+    | '/dashboard'
     | '/enterprise'
     | '/help'
     | '/how-it-works'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/amenities'
+    | '/dashboard'
     | '/enterprise'
     | '/help'
     | '/how-it-works'
@@ -210,6 +222,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AmenitiesRoute: typeof AmenitiesRoute
+  DashboardRoute: typeof DashboardRoute
   EnterpriseRoute: typeof EnterpriseRoute
   HelpRoute: typeof HelpRoute
   HowItWorksRoute: typeof HowItWorksRoute
@@ -239,6 +252,13 @@ declare module '@tanstack/react-router' {
       path: '/amenities'
       fullPath: '/amenities'
       preLoaderRoute: typeof AmenitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/enterprise': {
@@ -338,6 +358,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AmenitiesRoute: AmenitiesRoute,
+  DashboardRoute: DashboardRoute,
   EnterpriseRoute: EnterpriseRoute,
   HelpRoute: HelpRoute,
   HowItWorksRoute: HowItWorksRoute,

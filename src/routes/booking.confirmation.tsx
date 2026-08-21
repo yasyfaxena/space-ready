@@ -13,7 +13,9 @@ import {
 } from "lucide-react";
 import { SiteShell } from "@/components/site/site-shell";
 import { Button } from "@/components/ui/button";
-import { getLocation, getWorkspace, rupiah, workspaces } from "@/data/workspace-data";
+import { getLocation, getWorkspace, workspaces } from "@/data/workspace-data";
+import { QrPass } from "@/components/site/qr-pass";
+import { useI18n } from "@/lib/i18n";
 
 type ConfirmSearch = {
   workspace?: string;
@@ -23,9 +25,11 @@ type ConfirmSearch = {
   people?: number;
   method?: string;
   total?: number;
+  ref?: string;
 };
 
 export const Route = createFileRoute("/booking/confirmation")({
+  ssr: false,
   validateSearch: (search: Record<string, unknown>): ConfirmSearch => ({
     workspace: typeof search["workspace"] === "string" ? search["workspace"] : "mr-301",
     date: typeof search["date"] === "string" ? search["date"] : "2026-08-25",
@@ -34,6 +38,7 @@ export const Route = createFileRoute("/booking/confirmation")({
     people: Number(search["people"]) > 0 ? Number(search["people"]) : 6,
     method: typeof search["method"] === "string" ? search["method"] : "card",
     total: Number(search["total"]) > 0 ? Number(search["total"]) : 399600,
+    ref: typeof search["ref"] === "string" ? search["ref"] : "SB-DEMO01",
   }),
   head: () => ({
     meta: [
@@ -59,6 +64,7 @@ const methodLabel: Record<string, string> = {
 
 function BookingConfirmation() {
   const search = Route.useSearch();
+  const { t, money } = useI18n();
   const workspace = getWorkspace(search.workspace ?? "") ?? workspaces[0]!;
   const location = getLocation(workspace.locationSlug)!;
 
@@ -67,6 +73,8 @@ function BookingConfirmation() {
   const accessFrom = shift(start, -30);
   const accessTo = shift(end, 30);
   const date = search.date ?? "2026-08-25";
+  const reference = search.ref ?? "SB-DEMO01";
+  const accessCode = `SATTABI|${reference}|${workspace.id}|${date}|${start}-${end}`;
 
   return (
     <SiteShell>
@@ -75,18 +83,28 @@ function BookingConfirmation() {
           <div className="flex items-center gap-3 rounded-xl border border-success/25 bg-success/8 p-5">
             <CheckCircle2 className="size-6 text-success" />
             <div>
-              <h1 className="text-lg font-semibold">Booking confirmed</h1>
+              <h1 className="text-lg font-semibold">{t("book.confirmed")}</h1>
               <p className="text-sm text-muted-foreground">
                 Payment successful. A receipt has been sent to your email.
               </p>
             </div>
           </div>
 
+          <article className="mt-6 flex flex-col items-center gap-4 rounded-xl border border-primary/25 bg-primary/5 p-6 text-center">
+            <div className="flex items-center gap-2">
+              <QrCode className="size-5 text-primary" />
+              <h2 className="text-base font-semibold">{t("book.qrTitle")}</h2>
+            </div>
+            <QrPass value={accessCode} size={224} />
+            <p className="font-mono text-xs text-muted-foreground">{reference}</p>
+            <p className="max-w-md text-sm text-muted-foreground">{t("book.qrHint")}</p>
+          </article>
+
           <article className="mt-6 rounded-xl border border-border bg-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-base font-semibold">Booking details</h2>
               <span className="rounded-md bg-muted px-2.5 py-1 font-mono text-xs">
-                ID SB-2608-4471
+                {reference}
               </span>
             </div>
 
@@ -99,7 +117,7 @@ function BookingConfirmation() {
               <Detail
                 icon={CreditCard}
                 label="Payment"
-                value={`${rupiah(search.total ?? 0)} · ${methodLabel[search.method ?? "card"] ?? "Card"}`}
+                value={`${money(search.total ?? 0)} · ${methodLabel[search.method ?? "card"] ?? "Card"}`}
               />
             </dl>
 
@@ -168,7 +186,10 @@ function BookingConfirmation() {
           </article>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button asChild>
+            <Button asChild className="bg-galaxy-accent">
+              <Link to="/dashboard">{t("cta.dashboard")}</Link>
+            </Button>
+            <Button asChild variant="outline">
               <Link to="/workspaces" search={{ location: location.slug }}>
                 Book another workspace
               </Link>

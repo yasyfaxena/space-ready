@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   Building2,
@@ -17,7 +17,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { getLocation, getWorkspace, rupiah, workspaces } from "@/data/workspace-data";
+import { getLocation, getWorkspace, workspaces } from "@/data/workspace-data";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
+import { clearPendingBooking, savePendingBooking } from "@/lib/pending-booking";
 
 type ReviewSearch = {
   workspace?: string;
@@ -28,6 +32,7 @@ type ReviewSearch = {
 };
 
 export const Route = createFileRoute("/booking/review")({
+  ssr: false,
   validateSearch: (search: Record<string, unknown>): ReviewSearch => ({
     workspace: typeof search["workspace"] === "string" ? search["workspace"] : "mr-301",
     date: typeof search["date"] === "string" ? search["date"] : "2026-08-25",
@@ -56,6 +61,8 @@ const steps = ["Workspace", "Date & time", "Guests", "Review", "Payment", "Confi
 function BookingReview() {
   const search = Route.useSearch();
   const navigate = useNavigate();
+  const { session, loading } = useAuth();
+  const { money, t } = useI18n();
   const workspace = getWorkspace(search.workspace ?? "") ?? workspaces[0]!;
   const location = getLocation(workspace.locationSlug)!;
 
@@ -81,18 +88,46 @@ function BookingReview() {
   const tax = Math.round((subtotal - discount) * 0.11);
   const total = subtotal - discount + tax;
 
-  const submit = () => {
+  useEffect(() => {
+    if (loading) return;
+    if (!session) {
+      savePendingBooking({ workspace: workspace.id, date, start, end, people });
+      navigate({ to: "/login", replace: true });
+    }
+  }, [loading, session, navigate, workspace.id, date, start, end, people]);
+
+  const submit = async () => {
+    if (!session) return;
     setStatus("processing");
-    setTimeout(() => {
-      if (method === "bank") {
-        setStatus("failed");
-        return;
-      }
-      navigate({
-        to: "/booking/confirmation",
-        search: { workspace: workspace.id, date, start, end, people, method, total },
-      });
-    }, 1200);
+    if (method === "bank") {
+      window.setTimeout(() => setStatus("failed"), 900);
+      return;
+    }
+    const reference = "SB-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+    const accessCode = `SATTABI|${reference}|${workspace.id}|${date}|${start}-${end}`;
+    const { error } = await supabase.from("bookings").insert({
+      user_id: session.user.id,
+      workspace_id: workspace.id,
+      workspace_name: workspace.name,
+      location_slug: workspace.locationSlug,
+      booking_date: date,
+      start_time: start,
+      end_time: end,
+      people,
+      total_idr: total,
+      method,
+      reference,
+      access_code: accessCode,
+    });
+    if (error) {
+      setStatus("failed");
+      return;
+    }
+    clearPendingBooking();
+    navigate({
+      to: "/booking/confirmation",
+      search: { workspace: workspace.id, date, start, end, people, method, total, ref: reference },
+    });
   };
 
   return (
@@ -199,9 +234,9 @@ function BookingReview() {
           <h2 className="text-base font-semibold">Price summary</h2>
 
           <dl className="mt-5 space-y-2.5 text-sm">
-            <Row label={`${workspace.type} × ${workspace.unit === "hour" ? `${hours} hours` : `1 ${workspace.unit}`}`} value={rupiah(subtotal)} />
-            <Row label="Discount" value={discount ? `− ${rupiah(discount)}` : "—"} />
-            <Row label="Tax (VAT 11%)" value={rupiah(tax)} />
+            <Row label={`${workspace.type} × ${workspace.unit === "hour" ? `${hours} hours` : `1 ${workspace.unit}`}`} value={money(subtotal)} />
+            <Row label="Discount" value={discount ? `− ${money(discount)}` : "—"} />
+            <Row label="Tax (VAT 11%)" value={money(tax)} />
           </dl>
 
           <div className="mt-4 flex gap-2">
@@ -232,16 +267,16 @@ function BookingReview() {
 
           <div className="flex items-baseline justify-between">
             <span className="text-sm font-medium">Total</span>
-            <span className="text-2xl font-semibold">{rupiah(total)}</span>
+            <span className="text-2xl font-semibold">{money(total)}</span>
           </div>
 
-          <Button size="lg" className="mt-5 w-full" onClick={submit} disabled={status === "processing"}>
+          <Button size="lg" className="mt-5 w-full bg-galaxy-accent" onClick={() => void submit()} disabled={status === "processing"}>
             {status === "processing" ? (
               <>
-                <Loader2 className="size-4 animate-spin" /> Processing payment…
+                <Loader2 className="size-4 animate-spin" /> {t("book.processing")}
               </>
             ) : (
-              "Confirm & Pay"
+              t("book.pay")
             )}
           </Button>
 

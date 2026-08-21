@@ -1,12 +1,20 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Clock, KeyRound, MapPin, ShieldCheck, Users } from "lucide-react";
 import { SiteShell } from "@/components/site/site-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AvailabilityBadge } from "@/components/site/availability-badge";
-import { getLocation, getWorkspace, rupiah } from "@/data/workspace-data";
+import { getLocation, getWorkspace } from "@/data/workspace-data";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
+import { savePendingBooking } from "@/lib/pending-booking";
+
+const HOURS = Array.from({ length: 9 }, (_, i) => 8 + i); // 08:00 → 17:00
+const hhmm = (h: number) => `${String(h).padStart(2, "0")}:00`;
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export const Route = createFileRoute("/workspaces/$id")({
   loader: ({ params }) => {
@@ -36,19 +44,48 @@ export const Route = createFileRoute("/workspaces/$id")({
 function WorkspaceDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const { t, money } = useI18n();
   const workspace = getWorkspace(id)!;
   const location = getLocation(workspace.locationSlug)!;
 
-  const [date, setDate] = useState("2026-08-25");
-  const [start, setStart] = useState("14:00");
-  const [end, setEnd] = useState("16:00");
+  const [date, setDate] = useState(todayISO());
+  const [selected, setSelected] = useState<number[]>([]);
+  const [booked, setBooked] = useState<number[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    setSelected([]);
+    void supabase
+      .rpc("booked_slots", { _workspace_id: workspace.id, _date: date })
+      .then(({ data }) => {
+        if (!active) return;
+        const rows = (data as { start_time: string; end_time: string }[] | null) ?? [];
+        const taken = new Set<number>();
+        for (const r of rows) {
+          const from = Number(r.start_time.slice(0, 2));
+          const to = Number(r.end_time.slice(0, 2));
+          for (let h = from; h < to; h += 1) taken.add(h);
+        }
+        setBooked([...taken]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [workspace.id, date]);
+
+  const toggleHour = (h: number) => {
+    setSelected((prev) => {
+      if (prev.includes(h)) return prev.filter((x) => x !== h);
+      return [...prev, h].sort((a, b) => a - b);
+    });
+  };
+
+  const start = selected.length ? hhmm(selected[0]!) : "";
+  const end = selected.length ? hhmm(selected[selected.length - 1]! + 1) : "";
   const [people, setPeople] = useState(Math.min(4, workspace.capacity));
 
-  const hours = useMemo(() => {
-    const [sh = 0, sm = 0] = start.split(":").map(Number);
-    const [eh = 0, em = 0] = end.split(":").map(Number);
-    return Math.max(0, (eh * 60 + em - (sh * 60 + sm)) / 60);
-  }, [start, end]);
+  const hours = useMemo(() => selected.length, [selected]);
 
   const total = workspace.unit === "hour" ? workspace.price * hours : workspace.price;
   const bookable = workspace.availability !== "full" && workspace.availability !== "unavailable";
@@ -105,28 +142,62 @@ function WorkspaceDetail() {
               ))}
             </div>
 
-            <h2 className="mt-9 text-h2">Available times</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {workspace.slots.length ? (
-                workspace.slots.map((slot) => (
+            <h2 className="mt-9 text-h2">{t("detail.availability")}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{t("detail.availabilityHint")}</p>
+
+            <div className="mt-4 max-w-xs">
+              <Label htmlFor="cal-date" className="text-xs text-muted-foreground">
+                {t("detail.date")}
+              </Label>
+              <Input
+                id="cal-date"
+                type="date"
+                min={todayISO()}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="mt-1.5"
+              />
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-3">
+              {HOURS.map((h) => {
+                const isBooked = booked.includes(h);
+                const isSelected = selected.includes(h);
+                return (
                   <button
-                    key={slot}
+                    key={h}
                     type="button"
-                    onClick={() => slot.includes(":") && setStart(slot)}
-                    className={`rounded-md border px-3 py-2 text-sm transition-colors ${
-                      start === slot
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-card hover:bg-muted"
+                    disabled={isBooked}
+                    onClick={() => toggleHour(h)}
+                    className={`rounded-lg border px-3 py-3 text-sm font-medium transition-all ${
+                      isBooked
+                        ? "cursor-not-allowed border-destructive/25 bg-destructive/10 text-destructive/70 line-through"
+                        : isSelected
+                          ? "border-transparent bg-galaxy-accent text-primary-foreground shadow-[var(--shadow-lift)]"
+                          : "hover-glow border-border bg-card hover:border-primary/50"
                     }`}
                   >
-                    {slot}
+                    <span className="block">
+                      {hhmm(h)} – {hhmm(h + 1)}
+                    </span>
+                    <span className="mt-1 block text-[11px] font-normal opacity-80">
+                      {isBooked ? t("detail.booked") : isSelected ? t("detail.selected") : t("detail.free")}
+                    </span>
                   </button>
-                ))
-              ) : (
-                <p className="rounded-lg border border-dashed border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-                  Fully booked on this date. The next free slot is 26 August, 09:00.
-                </p>
-              )}
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-sm border border-border bg-card" /> {t("detail.free")}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-sm bg-galaxy-accent" /> {t("detail.selected")}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-sm bg-destructive/40" /> {t("detail.booked")}
+              </span>
             </div>
 
             <div className="mt-9 grid gap-4 sm:grid-cols-2">
@@ -150,34 +221,26 @@ function WorkspaceDetail() {
 
           <aside className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-lift)] lg:sticky lg:top-24">
             <p className="text-sm text-muted-foreground">
-              <span className="text-2xl font-semibold text-foreground">{rupiah(workspace.price)}</span> /{" "}
+              <span className="text-2xl font-semibold text-foreground">{money(workspace.price)}</span> /{" "}
               {workspace.unit}
             </p>
 
             <div className="mt-5 grid gap-4">
-              <div className="grid gap-1.5">
-                <Label htmlFor="d-date" className="text-xs text-muted-foreground">
-                  Date
-                </Label>
-                <Input id="d-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="grid gap-1.5">
-                  <Label htmlFor="d-start" className="text-xs text-muted-foreground">
-                    Start time
-                  </Label>
-                  <Input id="d-start" type="time" value={start} onChange={(e) => setStart(e.target.value)} />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="d-end" className="text-xs text-muted-foreground">
-                    End time
-                  </Label>
-                  <Input id="d-end" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
-                </div>
+              <div className="rounded-lg bg-surface p-3 text-sm">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {t("detail.date")}
+                </p>
+                <p className="mt-1 font-medium">{date}</p>
+                <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">
+                  {t("detail.availability")}
+                </p>
+                <p className="mt-1 font-medium">
+                  {selected.length ? `${start} – ${end}` : t("detail.selectSlot")}
+                </p>
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="d-people" className="text-xs text-muted-foreground">
-                  Number of people
+                  {t("detail.people")}
                 </Label>
                 <Input
                   id="d-people"
@@ -192,30 +255,37 @@ function WorkspaceDetail() {
 
             <dl className="mt-5 space-y-2 border-t border-border pt-4 text-sm">
               <div className="flex justify-between">
-                <dt className="text-muted-foreground">Duration</dt>
-                <dd>{workspace.unit === "hour" ? `${hours} hours` : `1 ${workspace.unit}`}</dd>
+                <dt className="text-muted-foreground">{t("detail.duration")}</dt>
+                <dd>{`${hours} ${t("common.hours")}`}</dd>
               </div>
               <div className="flex justify-between font-semibold">
-                <dt>Estimated total</dt>
-                <dd>{rupiah(total)}</dd>
+                <dt>{t("detail.estTotal")}</dt>
+                <dd>{money(total)}</dd>
               </div>
             </dl>
 
             <Button
               size="lg"
-              className="mt-5 w-full"
-              disabled={!bookable}
-              onClick={() =>
-                navigate({
-                  to: "/booking/review",
-                  search: { workspace: workspace.id, date, start, end, people },
-                })
-              }
+              className="mt-5 w-full bg-galaxy-accent"
+              disabled={!bookable || selected.length === 0}
+              onClick={() => {
+                const booking = { workspace: workspace.id, date, start, end, people };
+                if (!session) {
+                  savePendingBooking(booking);
+                  navigate({ to: "/login" });
+                  return;
+                }
+                navigate({ to: "/booking/review", search: booking });
+              }}
             >
-              {bookable ? "Book Now" : "Fully booked"}
+              {!bookable
+                ? "Fully booked"
+                : selected.length === 0
+                  ? t("detail.selectSlot")
+                  : t("cta.bookNow")}
             </Button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              You will review the full price before paying.
+              {session ? "You will review the full price before paying." : t("auth.loginRequired")}
             </p>
           </aside>
         </div>

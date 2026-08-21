@@ -1,13 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AlertCircle, Hexagon, Loader2 } from "lucide-react";
 import { SiteShell } from "@/components/site/site-shell";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
+import { clearPendingBooking, loadPendingBooking } from "@/lib/pending-booking";
 
 export const Route = createFileRoute("/login")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Log in to your Sattabi Workspaces account" },
@@ -23,7 +26,34 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const { signIn } = useAuth();
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    const { error: err } = await signIn(email, password);
+    setBusy(false);
+    if (err) {
+      setError(err);
+      return;
+    }
+    const pending = loadPendingBooking();
+    if (pending) {
+      clearPendingBooking();
+      navigate({ to: "/booking/review", search: pending });
+      return;
+    }
+    navigate({ to: "/dashboard" });
+  };
+
+  const pending = typeof window !== "undefined" ? loadPendingBooking() : null;
 
   return (
     <SiteShell>
@@ -34,58 +64,62 @@ function LoginPage() {
             <span className="text-sm font-semibold">Sattabi Workspaces</span>
           </div>
 
-          <h1 className="text-h1 mt-6">Welcome back</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Sign in to book a space and manage your access.
-          </p>
+          <h1 className="text-h1 mt-6">{t("auth.loginTitle")}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t("auth.loginSubtitle")}</p>
 
-          <form
-            className="mt-8 grid gap-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setStatus("loading");
-              setTimeout(() => setStatus("error"), 1000);
-            }}
-          >
+          {pending ? (
+            <p className="mt-4 rounded-lg border border-primary/25 bg-primary/5 px-4 py-3 text-sm">
+              {t("auth.loginRequired")}
+            </p>
+          ) : null}
+
+          <form className="mt-8 grid gap-4" onSubmit={(e) => void onSubmit(e)}>
             <div className="grid gap-1.5">
-              <Label htmlFor="l-email">Email</Label>
-              <Input id="l-email" type="email" placeholder="you@company.co.id" required />
+              <Label htmlFor="l-email">{t("auth.email")}</Label>
+              <Input
+                id="l-email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.co.id"
+                required
+              />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="l-password">Password</Label>
-              <Input id="l-password" type="password" placeholder="••••••••" required />
+              <Label htmlFor="l-password">{t("auth.password")}</Label>
+              <Input
+                id="l-password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm">
-                <Checkbox defaultChecked /> Remember me
-              </label>
-              <button type="button" className="text-sm text-primary hover:underline">
-                Forgot password?
-              </button>
-            </div>
-
-            {status === "error" ? (
+            {error ? (
               <p className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
-                <AlertCircle className="size-4" /> That email and password combination did not match.
+                <AlertCircle className="size-4 shrink-0" /> {error}
               </p>
             ) : null}
 
-            <Button type="submit" size="lg" disabled={status === "loading"}>
-              {status === "loading" ? (
+            <Button type="submit" size="lg" className="bg-galaxy-accent" disabled={busy}>
+              {busy ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Signing in…
+                  <Loader2 className="size-4 animate-spin" /> {t("auth.signingIn")}
                 </>
               ) : (
-                "Login"
+                t("cta.login")
               )}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            New to Sattabi?{" "}
+            {t("auth.noAccount")}{" "}
             <Link to="/signup" className="text-primary hover:underline">
-              Create an account
+              {t("auth.createAccount")}
             </Link>
           </p>
         </div>
